@@ -8,11 +8,20 @@ plugins:
       path: .
 variables: {}
 resources:
-  test:
+  aws-random:
+    type: keygen:awskms:Random
+    properties:
+      numberOfBytes: 32
+  aws-kms-data-key:
+    type: keygen:awskms:DataKeyPair
+    properties:
+      keyId: alias/keygen-test
+      keyPairSpec: ECC_NIST_P256
+  age-key:
     type: keygen:Age
     properties:
-      validityPeriodHours: 0
-      earlyRenewalHours: 0
+      random: ${aws-random.plainText}
 outputs:
-  key: ${test.key}
-  recipient: ${test.recipient}
+  # key: ${age-test.key}
+  recipient: ${age-key.id}
+  datakey: ${aws-kms-data-key.publicKey}

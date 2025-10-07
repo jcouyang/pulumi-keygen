@@ -5,15 +5,24 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jcouyang/pulumi-keygen/age"
+	"github.com/jcouyang/pulumi-keygen/awskms"
 	"github.com/pulumi/pulumi-go-provider/infer"
 )
 
 func main() {
 	provider, err := infer.NewProviderBuilder().
 		WithResources(
-			infer.Resource(Age{}),
+			infer.Resource(age.Identity{}),
+			infer.Resource(awskms.Random{}),
+			infer.Resource(awskms.DataKeyPair{}),
 		).
-		WithNamespace("github.com/jcouyang").
+		WithFunctions(
+			infer.Function(age.Encrypt{}),
+			infer.Function(age.Decrypt{}),
+		).
+		WithNamespace("pulumi-resource-keygen").
+		WithDisplayName("keygen").
 		Build()
 
 	if err != nil {
