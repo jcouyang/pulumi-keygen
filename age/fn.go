@@ -22,7 +22,7 @@ func (Encrypt) Invoke(_ context.Context, req infer.FunctionRequest[EncryptArgs])
 		}
 		recipients = append(recipients, parsed...)
 	}
-	
+
 	out := &bytes.Buffer{}
 	armorWriter := armor.NewWriter(out)
 	defer armorWriter.Close()
@@ -40,24 +40,30 @@ func (Encrypt) Invoke(_ context.Context, req infer.FunctionRequest[EncryptArgs])
 }
 
 func (r *Encrypt) Annotate(a infer.Annotator) {
-	a.Describe(r,
-		"Encrypt returns a copy of `s`, replacing matches of the `old`\n"+
-			"with the replacement string `new`.")
+	a.Describe(r, "Encrypt encrypts a file to one or more recipients.")
 }
 
 type EncryptArgs struct {
-	Recipients       []string `pulumi:"recipients"`
-	Plaintext string `pulumi:"plaintext" provider:"secret"`
+	Recipients []string `pulumi:"recipients"`
+	Plaintext  string   `pulumi:"plaintext" provider:"secret"`
+}
+
+func (er *EncryptArgs) Annotate(a infer.Annotator) {
+	a.Describe(&er.Plaintext, "The plaintext to encrypt.")
+	a.Describe(&er.Recipients, "The recipients to encrypt to.")
 }
 
 type EncryptResult struct {
 	Result string `pulumi:"result"`
 }
 
-
 type Decrypt struct{}
 
-func (Decrypt) Invoke(_ context.Context, req infer.FunctionRequest[DecryptArgs]) (resp infer.FunctionResponse[DecryptResult], err error) {	
+func (Decrypt) Annotate(a infer.Annotator) {
+	a.Describe(Decrypt{}, "Decrypt decrypts a file encrypted to one or more identities.")
+}
+
+func (Decrypt) Invoke(_ context.Context, req infer.FunctionRequest[DecryptArgs]) (resp infer.FunctionResponse[DecryptResult], err error) {
 	out := &bytes.Buffer{}
 	armorReader := armor.NewReader(strings.NewReader(req.Input.Ciphertext))
 	identity, err := age.ParseX25519Identity(req.Input.Identity)
@@ -77,15 +83,14 @@ func (Decrypt) Invoke(_ context.Context, req infer.FunctionRequest[DecryptArgs])
 	}, nil
 }
 
-func (r *Decrypt) Annotate(a infer.Annotator) {
-	a.Describe(r,
-		"Decrypt returns a copy of `s`, replacing matches of the `old`\n"+
-			"with the replacement string `new`.")
+type DecryptArgs struct {
+	Identity   string `pulumi:"identity" provider:"secret"`
+	Ciphertext string `pulumi:"ciphertext"`
 }
 
-type DecryptArgs struct {
-	Identity       string `pulumi:"identity" provider:"secret"`
-	Ciphertext string `pulumi:"ciphertext"`
+func (r *DecryptArgs) Annotate(a infer.Annotator) {
+	a.Describe(&r.Identity, "The identity to decrypt with.")
+	a.Describe(&r.Ciphertext, "The ciphertext to decrypt.")
 }
 
 type DecryptResult struct {

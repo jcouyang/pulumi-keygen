@@ -20,25 +20,28 @@ func (f *Random) Annotate(a infer.Annotator) {
 }
 
 type RandomArgs struct {
-	NumberOfBytes int `pulumi:"numberOfBytes"`
+	NumberOfBytes       int    `pulumi:"numberOfBytes"`
 	ValidityPeriodHours int    `pulumi:"validityPeriodHours,optional"`
 	EarlyRenewalHours   int    `pulumi:"earlyRenewalHours,optional"`
-	CustomKeyStoreId  string `pulumi:"customKeyStoreId,optional"`
+	CustomKeyStoreId    string `pulumi:"customKeyStoreId,optional"`
 }
 
 func (f *RandomArgs) Annotate(a infer.Annotator) {
-	// a.Describe(&f.SshPrivateKeyPem, "Optional, if provide will parse the key otherwise will generate an Ed25519 key")
+	a.Describe(&f.NumberOfBytes, "Number of bytes to generate")
+	a.Describe(&f.ValidityPeriodHours, "Validity period in hours, after initial creation")
+	a.Describe(&f.EarlyRenewalHours, "Early renewal period in hours, before expiration")
+	a.Describe(&f.CustomKeyStoreId, "Custom key store ID")
 }
 
 type RandomState struct {
 	RandomArgs
 	PlainText string `pulumi:"plainText" provider:"secret"`
-	Created    int64  `pulumi:"created"`
+	Created   int64  `pulumi:"created"`
 }
 
 func (f *RandomState) Annotate(a infer.Annotator) {
-	// a.Describe(&f.ValidityPeriodHours, " how long this key valid for")
-	// a.Describe(&f.EarlyRenewalHours, "")
+	a.Describe(&f.PlainText, "Random byte string")
+	a.Describe(&f.Created, "Timestamp of creation")
 }
 
 func (r Random) Create(ctx context.Context, req infer.CreateRequest[RandomArgs]) (resp infer.CreateResponse[RandomState], err error) {
@@ -52,21 +55,20 @@ func (r Random) Create(ctx context.Context, req infer.CreateRequest[RandomArgs])
 
 	svc := kms.NewFromConfig(cfg)
 	input := &kms.GenerateRandomInput{
-		NumberOfBytes:  aws.Int32(int32(req.Inputs.NumberOfBytes)),
-
+		NumberOfBytes: aws.Int32(int32(req.Inputs.NumberOfBytes)),
 	}
 	if len(req.Inputs.CustomKeyStoreId) > 0 {
 		input.CustomKeyStoreId = &req.Inputs.CustomKeyStoreId
 	}
 	rresp, err := svc.GenerateRandom(ctx, input)
-	if err  != nil {
+	if err != nil {
 		return
 	}
-	
+
 	return infer.CreateResponse[RandomState]{
 		ID: req.Name, Output: RandomState{
-		req.Inputs,
-		base64.StdEncoding.EncodeToString(rresp.Plaintext),
+			req.Inputs,
+			base64.StdEncoding.EncodeToString(rresp.Plaintext),
 			time.Now().Unix(),
 		},
 	}, nil
@@ -115,8 +117,6 @@ func (Random) Diff(ctx context.Context, req infer.DiffRequest[RandomArgs, Random
 }
 
 func (Random) WireDependencies(f infer.FieldSelector, args *RandomArgs, state *RandomState) {
-	f.OutputField(&state.PlainText).DependsOn(f.InputField(&args.ValidityPeriodHours))
-	f.OutputField(&state.PlainText).DependsOn(f.InputField(&args.EarlyRenewalHours))
 	f.OutputField(&state.PlainText).DependsOn(f.InputField(&args.CustomKeyStoreId))
 	f.OutputField(&state.PlainText).DependsOn(f.InputField(&args.NumberOfBytes))
 }

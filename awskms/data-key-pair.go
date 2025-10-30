@@ -17,32 +17,31 @@ import (
 type DataKeyPair struct{}
 
 func (f *DataKeyPair) Annotate(a infer.Annotator) {
-	a.Describe(&f, "Cryptographically secure random byte string")
+	a.Describe(&f, "A unique asymmetric data key pair for use outside of KMS")
 }
 
 type DataKeyPairArgs struct {
-	ValidityPeriodHours int    `pulumi:"validityPeriodHours,optional"`
-	EarlyRenewalHours   int    `pulumi:"earlyRenewalHours,optional"`
-	KeyId  string `pulumi:"keyId"`
-	KeyPairSpec types.DataKeyPairSpec `pulumi:"keyPairSpec"`
-	WithoutPlainText bool `pulumi:"withoutPlainText,optional"`
+	ValidityPeriodHours int                   `pulumi:"validityPeriodHours,optional"`
+	EarlyRenewalHours   int                   `pulumi:"earlyRenewalHours,optional"`
+	KeyId               string                `pulumi:"keyId"`
+	KeyPairSpec         types.DataKeyPairSpec `pulumi:"keyPairSpec"`
+	WithoutPlainText    bool                  `pulumi:"withoutPlainText,optional"`
 }
 
 func (f *DataKeyPairArgs) Annotate(a infer.Annotator) {
-	// a.Describe(&f.SshPrivateKeyPem, "Optional, if provide will parse the key otherwise will generate an Ed25519 key")
+	a.Describe(&f.ValidityPeriodHours, "Number of hours, after initial issuing, that the key will remain valid for.")
+	a.Describe(&f.EarlyRenewalHours, "Number of hours, before expiration, that the key will be renewed.")
+	a.Describe(&f.KeyId, "The ID of the KMS key to use for encrypting the data key.")
+	a.Describe(&f.KeyPairSpec, "The type of data key pair to generate.")
+	a.Describe(&f.WithoutPlainText, "Whether to generate the private key without plaintext. Default is false.")
 }
 
 type DataKeyPairState struct {
 	DataKeyPairArgs
-	PrivateKeyPlainText string `pulumi:"privateKey" provider:"secret"`
+	PrivateKeyPlainText      string `pulumi:"privateKey" provider:"secret"`
 	PrivateKeyCiphertextBlob string `pulumi:"privateKeyCiphertextBlob"`
-	PublicKey string `pulumi:"publicKey"`
-	Created    int64  `pulumi:"created"`
-}
-
-func (f *DataKeyPairState) Annotate(a infer.Annotator) {
-	// a.Describe(&f.ValidityPeriodHours, " how long this key valid for")
-	// a.Describe(&f.EarlyRenewalHours, "")
+	PublicKey                string `pulumi:"publicKey"`
+	Created                  int64  `pulumi:"created"`
 }
 
 func (r DataKeyPair) Create(ctx context.Context, req infer.CreateRequest[DataKeyPairArgs]) (resp infer.CreateResponse[DataKeyPairState], err error) {
@@ -63,37 +62,37 @@ func (r DataKeyPair) Create(ctx context.Context, req infer.CreateRequest[DataKey
 	}
 	if req.Inputs.WithoutPlainText {
 		rresp, err := svc.GenerateDataKeyPairWithoutPlaintext(ctx, &kms.GenerateDataKeyPairWithoutPlaintextInput{
-			KeyId: input.KeyId,
-			KeyPairSpec: input.KeyPairSpec,
-			DryRun: input.DryRun,
+			KeyId:             input.KeyId,
+			KeyPairSpec:       input.KeyPairSpec,
+			DryRun:            input.DryRun,
 			EncryptionContext: input.EncryptionContext,
 		})
-			if err  != nil {
-		return resp, err
+		if err != nil {
+			return resp, err
+		}
+
+		return infer.CreateResponse[DataKeyPairState]{
+			ID: req.Name, Output: DataKeyPairState{
+				PrivateKeyCiphertextBlob: base64.StdEncoding.EncodeToString(rresp.PrivateKeyCiphertextBlob),
+				DataKeyPairArgs:          req.Inputs,
+				PublicKey:                base64.StdEncoding.EncodeToString(rresp.PublicKey),
+				Created:                  time.Now().Unix(),
+			},
+		}, nil
 	}
-	
-	return infer.CreateResponse[DataKeyPairState]{
-		ID: req.Name, Output: DataKeyPairState{
-			PrivateKeyCiphertextBlob: base64.StdEncoding.EncodeToString(rresp.PrivateKeyCiphertextBlob),
-			DataKeyPairArgs:          req.Inputs,
-			PublicKey:                base64.StdEncoding.EncodeToString(rresp.PublicKey),
-			Created:                  time.Now().Unix(),
-		},
-	}, nil
-	}
-	
+
 	rresp, err := svc.GenerateDataKeyPair(ctx, input)
-	if err  != nil {
+	if err != nil {
 		return
 	}
-	
+
 	return infer.CreateResponse[DataKeyPairState]{
 		ID: req.Name, Output: DataKeyPairState{
-		req.Inputs,
+			req.Inputs,
 			base64.StdEncoding.EncodeToString(rresp.PrivateKeyPlaintext),
-						base64.StdEncoding.EncodeToString(rresp.PrivateKeyCiphertextBlob),
-						base64.StdEncoding.EncodeToString(rresp.PublicKey),
-		time.Now().Unix(),
+			base64.StdEncoding.EncodeToString(rresp.PrivateKeyCiphertextBlob),
+			base64.StdEncoding.EncodeToString(rresp.PublicKey),
+			time.Now().Unix(),
 		},
 	}, nil
 }
@@ -146,7 +145,8 @@ func (DataKeyPair) Diff(ctx context.Context, req infer.DiffRequest[DataKeyPairAr
 }
 
 func (DataKeyPair) WireDependencies(f infer.FieldSelector, args *DataKeyPairArgs, state *DataKeyPairState) {
-	f.OutputField(&state.PrivateKeyCiphertextBlob).DependsOn(f.InputField(&args.ValidityPeriodHours))
-	f.OutputField(&state.PrivateKeyCiphertextBlob).DependsOn(f.InputField(&args.EarlyRenewalHours))
 	f.OutputField(&state.PrivateKeyCiphertextBlob).DependsOn(f.InputField(&args.KeyId))
+	f.OutputField(&state.PrivateKeyCiphertextBlob).DependsOn(f.InputField(&args.KeyPairSpec))
+	f.OutputField(&state.PrivateKeyPlainText).DependsOn(f.InputField(&args.KeyId))
+	f.OutputField(&state.PrivateKeyPlainText).DependsOn(f.InputField(&args.KeyPairSpec))
 }

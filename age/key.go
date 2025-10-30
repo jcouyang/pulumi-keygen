@@ -16,7 +16,7 @@ import (
 type Identity struct{}
 
 func (f *Identity) Annotate(a infer.Annotator) {
-	a.Describe(&f, "Age Encyptiont Identity")
+	a.Describe(&f, "Age Encryption Identity, standard age private key")
 }
 
 type IdentityArgs struct {
@@ -26,7 +26,9 @@ type IdentityArgs struct {
 }
 
 func (f *IdentityArgs) Annotate(a infer.Annotator) {
-	// a.Describe(&f.SshPrivateKeyPem, "Optional, if provide will parse the key otherwise will generate an Ed25519 key")
+	a.Describe(&f.ValidityPeriodHours, "Number of hours, after initial issuing, that the key will remain valid for.")
+	a.Describe(&f.EarlyRenewalHours, "Number of hours, before expiration, that the key will be renewed.")
+	a.Describe(&f.Random, "Custom random bytes, it must be 32 bytes, base64 encoded, optional, if not provided go rand is used to generate the random bytes")
 }
 
 type IdentityState struct {
@@ -34,12 +36,6 @@ type IdentityState struct {
 	PrivateKey string `pulumi:"key" provider:"secret"`
 	Recipient  string `pulumi:"recipient"`
 	Created    int64  `pulumi:"created"`
-}
-
-func (f *IdentityState) Annotate(a infer.Annotator) {
-	a.Describe(&f.PrivateKey, "	")
-	// a.Describe(&f.ValidityPeriodHours, " how long this key valid for")
-	// a.Describe(&f.EarlyRenewalHours, "")
 }
 
 func (Identity) Create(ctx context.Context, req infer.CreateRequest[IdentityArgs]) (resp infer.CreateResponse[IdentityState], err error) {
@@ -54,7 +50,7 @@ func (Identity) Create(ctx context.Context, req infer.CreateRequest[IdentityArgs
 			return resp, fmt.Errorf("provided random is not base64 encoded")
 		}
 		if size := len(decoded); size > 0 && size != curve25519.ScalarSize {
-			return resp, fmt.Errorf("provided random has incorrect(%i) size", size)
+			return resp, fmt.Errorf("provided random has incorrect(%d) size", size)
 		}
 		encoded, err := bech32.Encode("AGE-SECRET-KEY-", decoded)
 		if err != nil {
@@ -126,7 +122,4 @@ func (Identity) Diff(ctx context.Context, req infer.DiffRequest[IdentityArgs, Id
 
 func (Identity) WireDependencies(f infer.FieldSelector, args *IdentityArgs, state *IdentityState) {
 	f.OutputField(&state.PrivateKey).DependsOn(f.InputField(&args.Random))
-	f.OutputField(&state.PrivateKey).DependsOn(f.InputField(&args.ValidityPeriodHours))
-	f.OutputField(&state.PrivateKey).DependsOn(f.InputField(&args.EarlyRenewalHours))
 }
-

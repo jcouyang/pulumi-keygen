@@ -16,10 +16,13 @@ func main() {
 			infer.Resource(age.Identity{}),
 			infer.Resource(awskms.Random{}),
 			infer.Resource(awskms.DataKeyPair{}),
+			infer.Resource(awskms.DataKey{}),
 		).
 		WithFunctions(
 			infer.Function(age.Encrypt{}),
 			infer.Function(age.Decrypt{}),
+			infer.Function(awskms.Encrypt{}),
+			infer.Function(awskms.Decrypt{}),
 		).
 		WithNamespace("pulumi-resource-keygen").
 		WithDisplayName("keygen").
