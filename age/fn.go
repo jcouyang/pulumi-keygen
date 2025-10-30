@@ -59,8 +59,8 @@ type EncryptResult struct {
 
 type Decrypt struct{}
 
-func (Decrypt) Annotate(a infer.Annotator) {
-	a.Describe(Decrypt{}, "Decrypt decrypts a file encrypted to one or more identities.")
+func (d *Decrypt) Annotate(a infer.Annotator) {
+	a.Describe(d, "Decrypt decrypts a file encrypted to one or more identities.")
 }
 
 func (Decrypt) Invoke(_ context.Context, req infer.FunctionRequest[DecryptArgs]) (resp infer.FunctionResponse[DecryptResult], err error) {

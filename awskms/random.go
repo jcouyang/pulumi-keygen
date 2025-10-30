@@ -35,7 +35,7 @@ func (f *RandomArgs) Annotate(a infer.Annotator) {
 
 type RandomState struct {
 	RandomArgs
-	PlainText string `pulumi:"plainText" provider:"secret"`
+	PlainText string `pulumi:"plaintext" provider:"secret"`
 	Created   int64  `pulumi:"created"`
 }
 

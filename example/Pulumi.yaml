@@ -6,7 +6,20 @@ plugins:
   providers:
     - name: keygen
       path: .
-variables: {}
+variables:
+  age-encrypted:
+    fn:invoke:
+      function: keygen:age:Encrypt
+      arguments:
+        plaintext: hello
+      return: result
+  age-decrypted:
+    fn:invoke:
+      function: keygen:age:Decrypt
+      arguments:
+        ciphertext: ${age-encrypted}
+      return: result
+
 resources:
   aws-random:
     type: keygen:awskms:Random
@@ -21,34 +34,23 @@ resources:
     type: keygen:awskms:DataKey
     properties:
       keyId: alias/keygen-test
-      keyPairSpec: AES_256
+      keySpec: AES_256
   age-key:
-    type: keygen:Age
+    type: keygen:age:Identity
   age-key-from-aws-rand:
-    type: keygen:Age
+    type: keygen:age:Identity
     properties:
-      random: ${aws-random.plainText}
+      random: ${aws-random.plaintext}
   age-key-from-aws-aes:
-    type: keygen:Age
+    type: keygen:age:Identity
     properties:
-      random: ${aws-kms-data-key.plainText}
-  age-encrypted:
-    fn:invoke:
-      function: keygen:age:Encrypt
-      arguments:
-        plaintext: hello
-      return: result
-  age-decrypted:
-    fn:invoke:
-      function: keygen:age:Decrypt
-      arguments:
-        ciphertext: ${age-encrypted}
-      return: result
+      random: ${aws-kms-data-key.plaintext}
   tls-ca:
     type: tls:SelfSignedCert
     properties:
       isCaCertificate: true
       privateKeyPem: ${aws-kms-data-key-pair.privateKey}
+      validityPeriodHours: 0
       allowedUses:
         - cert_signing
   tls-cert-request:
@@ -61,7 +63,11 @@ resources:
   tls-cert:
     type: tls:LocallySignedCert
     properties:
-      caCertPem: ${tls-ca.certificatePem}
+      caCertPem: ${tls-ca.certPem}
+      allowedUses:
+        - digital_signature
+        - key_encipherment
+      validityPeriodHours: 0
       caPrivateKeyPem: ${tls-ca.privateKeyPem}
       certRequestPem: ${tls-cert-request.certRequestPem}
 outputs:
@@ -70,4 +76,4 @@ outputs:
   age-key-from-aws-rand-id: ${age-key-from-aws-rand.id}
   age-key-from-aws-aes-id: ${age-key-from-aws-aes.id}
   age-decrypted: ${age-decrypted}
-  cert-from-kms-keypair: ${tls-cert.certificatePem}
+  cert-from-kms-keypair: ${tls-cert.certPem}
