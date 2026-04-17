@@ -16,6 +16,7 @@ in pkgs.mkShell {
     pkgs.openssl
     pkgs.softhsm
     pkgs.opensc
+    pkgs.gcc
   ];
 
   # Set CGO_ENABLED for PKCS#11 support
