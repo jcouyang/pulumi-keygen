@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  binary:
+    strategy:
+      matrix:
+        os:
+          - runner: "macos-latest"
+            arch: "amd64"
+            os: "darwin"
+          - runner: "ubuntu-latest"
+            arch: "amd64"
+            os: "linux"
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-25.11
+      - run: |
+          nix-shell --run 'make release-${{ matrix.os.os }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os.runner }}-binary
+          path: ./dist
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v4
+      - run: |
+          nix-shell --run 'gh release v${VERSION} ./ubuntu-latest-binary/pulumi-resource-keygen-linux-amd64 ./macos-latest/pulumi-resource-keygen-darwin-amd64'

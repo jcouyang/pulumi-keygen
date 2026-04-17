@@ -1,25 +1,44 @@
 name: example
 description: A minimal Pulumi YAML program
 runtime: yaml
-config: {'pulumi:tags': {value: {'pulumi:template': yaml}}}
+config: { "pulumi:tags": { value: { "pulumi:template": yaml } } }
 plugins:
   providers:
     - name: keygen
       path: .
+
 variables:
   age-encrypted:
-    fn:invoke:
-      function: keygen:age:Encrypt
+    fn::invoke:
+      function: keygen:age:encrypt
       arguments:
+        recipients:
+          - ${age-key.recipient}
         plaintext: hello
       return: result
   age-decrypted:
-    fn:invoke:
-      function: keygen:age:Decrypt
+    fn::invoke:
+      function: keygen:age:decrypt
       arguments:
         ciphertext: ${age-encrypted}
+        identity: ${age-key.key}
       return: result
-
+  hsm-encrypted:
+    fn::invoke:
+      function: keygen:pkcs11:encrypt
+      arguments:
+        tokenLabel: test
+        keyLabel: ${hsm-key.keyLabel}
+        plaintext: SGVsbG8sIEhTTSBXb3JsZCE=
+      return: result
+  hsm-decrypted:
+    fn::invoke:
+      function: keygen:pkcs11:decrypt
+      arguments:
+        tokenLabel: test
+        keyLabel: ${hsm-key.keyLabel}
+        ciphertext: ${hsm-encrypted}
+      return: result
 resources:
   aws-random:
     type: keygen:awskms:Random
@@ -70,10 +89,20 @@ resources:
       validityPeriodHours: 0
       caPrivateKeyPem: ${tls-ca.privateKeyPem}
       certRequestPem: ${tls-cert-request.certRequestPem}
+  hsm-key:
+    type: keygen:pkcs11:Key
+    properties:
+      keyLabel: test-hsm-key-3
+      tokenLabel: test
+      keyType: RSA
+      keySize: 2048
+      validityPeriodHours: 8760
+
 outputs:
-  # key: ${age-test.key}
   age-id: ${age-key.id}
   age-key-from-aws-rand-id: ${age-key-from-aws-rand.id}
   age-key-from-aws-aes-id: ${age-key-from-aws-aes.id}
   age-decrypted: ${age-decrypted}
   cert-from-kms-keypair: ${tls-cert.certPem}
+  hsm-key-public-key: ${hsm-key.publicKey}
+  hsm-decrypted: ${hsm-decrypted}

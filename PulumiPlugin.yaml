@@ -1,1 +1,3 @@
 runtime: go
+displayName: Keygen
+pluginDownloadURL: github://api.github.com/jcouyang

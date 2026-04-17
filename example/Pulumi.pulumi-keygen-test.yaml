@@ -1,1 +1,5 @@
 encryptionsalt: v1:IrP+QmrUjcU=:v1:XYZxbw8HCDLmMPN4:aDadu1nrfVCuEWRJUTT/yPkbP2kSrQ==
+config:
+  keygen:hsmLocation: /nix/store/drpfbmimw2l6ksdfpv82ddi03d8yr0gw-softhsm-2.6.1/lib/softhsm/libsofthsm2.so
+  keygen:hsmPin:
+    secure: v1:/rnBcqMjXFTwCeOr:0e5rtW7xNw7O6Ca0MVsa7dqOGoA=

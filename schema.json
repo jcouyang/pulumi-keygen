@@ -1,0 +1,671 @@
+{
+  "name": "keygen",
+  "displayName": "keygen",
+  "version": "0.1.0",
+  "description": "Cryptographic key generation and management",
+  "keywords": [
+    "pulumi",
+    "keygen",
+    "encryption",
+    "security",
+    "cryptography",
+    "age",
+    "aws-kms",
+    "pkcs11",
+    "hsm"
+  ],
+  "license": "BSD-3-Clause",
+  "repository": "https://github.com/jcouyang/pulumi-keygen",
+  "publisher": "jcouyang",
+  "namespace": "yournamespace",
+  "meta": {
+    "moduleFormat": "(.*)"
+  },
+  "language": {
+    "csharp": {
+      "respectSchemaVersion": true
+    },
+    "go": {
+      "generateResourceContainerTypes": true,
+      "importBasePath": "github.com/yournamespace/keygen/sdk/go/keygen",
+      "respectSchemaVersion": true
+    },
+    "nodejs": {
+      "respectSchemaVersion": true
+    },
+    "python": {
+      "pyproject": {
+        "enabled": true
+      },
+      "respectSchemaVersion": true
+    }
+  },
+  "config": {
+    "variables": {
+      "hsmLocation": {
+        "type": "string",
+        "description": "HSM Library Location e.g. /usr/lib/softhsm/libsofthsm2.so"
+      },
+      "hsmPin": {
+        "type": "string",
+        "description": "PIN for authentication to the PKCS#11 token",
+        "secret": true
+      }
+    },
+    "defaults": [
+      "hsmLocation",
+      "hsmPin"
+    ]
+  },
+  "provider": {
+    "properties": {
+      "hsmLocation": {
+        "type": "string",
+        "description": "HSM Library Location e.g. /usr/lib/softhsm/libsofthsm2.so"
+      },
+      "hsmPin": {
+        "type": "string",
+        "description": "PIN for authentication to the PKCS#11 token",
+        "secret": true
+      }
+    },
+    "type": "object",
+    "required": [
+      "hsmLocation",
+      "hsmPin"
+    ],
+    "inputProperties": {
+      "hsmLocation": {
+        "type": "string",
+        "description": "HSM Library Location e.g. /usr/lib/softhsm/libsofthsm2.so"
+      },
+      "hsmPin": {
+        "type": "string",
+        "description": "PIN for authentication to the PKCS#11 token",
+        "secret": true
+      }
+    },
+    "requiredInputs": [
+      "hsmLocation",
+      "hsmPin"
+    ]
+  },
+  "resources": {
+    "keygen:age:Identity": {
+      "description": "Age Encryption Identity, standard age private key",
+      "properties": {
+        "created": {
+          "type": "integer"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "key": {
+          "type": "string",
+          "secret": true
+        },
+        "random": {
+          "type": "string",
+          "description": "Custom random bytes, it must be 32 bytes, base64 encoded, optional, if not provided go rand is used to generate the random bytes",
+          "secret": true
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        }
+      },
+      "type": "object",
+      "required": [
+        "created",
+        "key",
+        "recipient"
+      ],
+      "inputProperties": {
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "random": {
+          "type": "string",
+          "description": "Custom random bytes, it must be 32 bytes, base64 encoded, optional, if not provided go rand is used to generate the random bytes",
+          "secret": true
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        }
+      }
+    },
+    "keygen:awskms:DataKey": {
+      "description": "A symmetric data key for use outside of AWS KMS",
+      "properties": {
+        "ciphertextBlob": {
+          "type": "string"
+        },
+        "created": {
+          "type": "integer"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyId": {
+          "type": "string",
+          "description": "The ID of the KMS key to use for encrypting the data key."
+        },
+        "keySpec": {
+          "type": "string",
+          "description": "The type of data key to generate. AES_128 | AES_256. You must specify either the KeySpec or the NumberOfBytes parameter (but not both)"
+        },
+        "numberOfBytes": {
+          "type": "integer",
+          "deprecationMessage": "Minimum value of 1. Maximum value of 1024."
+        },
+        "plaintext": {
+          "type": "string",
+          "secret": true
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        },
+        "withoutPlainText": {
+          "type": "boolean",
+          "description": "Whether to generate the private key without plaintext. Default is false."
+        }
+      },
+      "type": "object",
+      "required": [
+        "ciphertextBlob",
+        "created",
+        "keyId",
+        "keySpec",
+        "plaintext"
+      ],
+      "inputProperties": {
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyId": {
+          "type": "string",
+          "description": "The ID of the KMS key to use for encrypting the data key."
+        },
+        "keySpec": {
+          "type": "string",
+          "description": "The type of data key to generate. AES_128 | AES_256. You must specify either the KeySpec or the NumberOfBytes parameter (but not both)"
+        },
+        "numberOfBytes": {
+          "type": "integer",
+          "deprecationMessage": "Minimum value of 1. Maximum value of 1024."
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        },
+        "withoutPlainText": {
+          "type": "boolean",
+          "description": "Whether to generate the private key without plaintext. Default is false."
+        }
+      },
+      "requiredInputs": [
+        "keyId",
+        "keySpec"
+      ]
+    },
+    "keygen:awskms:DataKeyPair": {
+      "description": "A unique asymmetric data key pair for use outside of KMS",
+      "properties": {
+        "created": {
+          "type": "integer"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyId": {
+          "type": "string",
+          "description": "The ID of the KMS key to use for encrypting the data key."
+        },
+        "keyPairSpec": {
+          "type": "string",
+          "description": "The type of data key pair to generate."
+        },
+        "privateKey": {
+          "type": "string",
+          "secret": true
+        },
+        "privateKeyCiphertextBlob": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        },
+        "withoutPlainText": {
+          "type": "boolean",
+          "description": "Whether to generate the private key without plaintext. Default is false."
+        }
+      },
+      "type": "object",
+      "required": [
+        "created",
+        "keyId",
+        "keyPairSpec",
+        "privateKey",
+        "privateKeyCiphertextBlob",
+        "publicKey"
+      ],
+      "inputProperties": {
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyId": {
+          "type": "string",
+          "description": "The ID of the KMS key to use for encrypting the data key."
+        },
+        "keyPairSpec": {
+          "type": "string",
+          "description": "The type of data key pair to generate."
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        },
+        "withoutPlainText": {
+          "type": "boolean",
+          "description": "Whether to generate the private key without plaintext. Default is false."
+        }
+      },
+      "requiredInputs": [
+        "keyId",
+        "keyPairSpec"
+      ]
+    },
+    "keygen:awskms:Random": {
+      "description": "Cryptographically secure random byte string",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "description": "Timestamp of creation"
+        },
+        "customKeyStoreId": {
+          "type": "string",
+          "description": "Custom key store ID"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Early renewal period in hours, before expiration"
+        },
+        "numberOfBytes": {
+          "type": "integer",
+          "description": "Number of bytes to generate"
+        },
+        "plaintext": {
+          "type": "string",
+          "description": "Random byte string",
+          "secret": true
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Validity period in hours, after initial creation"
+        }
+      },
+      "type": "object",
+      "required": [
+        "created",
+        "numberOfBytes",
+        "plaintext"
+      ],
+      "inputProperties": {
+        "customKeyStoreId": {
+          "type": "string",
+          "description": "Custom key store ID"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Early renewal period in hours, before expiration"
+        },
+        "numberOfBytes": {
+          "type": "integer",
+          "description": "Number of bytes to generate"
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Validity period in hours, after initial creation"
+        }
+      },
+      "requiredInputs": [
+        "numberOfBytes"
+      ]
+    },
+    "keygen:pkcs11:Key": {
+      "description": "A cryptographic key stored in a PKCS#11 HSM",
+      "properties": {
+        "created": {
+          "type": "integer"
+        },
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyLabel": {
+          "type": "string",
+          "description": "Label for the key in the HSM"
+        },
+        "keySize": {
+          "type": "integer",
+          "description": "Size of the key in bits. For RSA: 2048, 3072, 4096. For EC: 256 (P-256), 384 (P-384), 521 (P-521)"
+        },
+        "keyType": {
+          "type": "string",
+          "description": "Type of key to generate: RSA or EC (default: RSA)"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "slotNumber": {
+          "type": "integer",
+          "description": "Slot number to use for the PKCS#11 session"
+        },
+        "tokenLabel": {
+          "type": "string"
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        }
+      },
+      "type": "object",
+      "required": [
+        "created",
+        "keyLabel",
+        "publicKey"
+      ],
+      "inputProperties": {
+        "earlyRenewalHours": {
+          "type": "integer",
+          "description": "Number of hours, before expiration, that the key will be renewed."
+        },
+        "keyLabel": {
+          "type": "string",
+          "description": "Label for the key in the HSM"
+        },
+        "keySize": {
+          "type": "integer",
+          "description": "Size of the key in bits. For RSA: 2048, 3072, 4096. For EC: 256 (P-256), 384 (P-384), 521 (P-521)"
+        },
+        "keyType": {
+          "type": "string",
+          "description": "Type of key to generate: RSA or EC (default: RSA)"
+        },
+        "slotNumber": {
+          "type": "integer",
+          "description": "Slot number to use for the PKCS#11 session"
+        },
+        "tokenLabel": {
+          "type": "string"
+        },
+        "validityPeriodHours": {
+          "type": "integer",
+          "description": "Number of hours, after initial issuing, that the key will remain valid for."
+        }
+      },
+      "requiredInputs": [
+        "keyLabel"
+      ]
+    }
+  },
+  "functions": {
+    "keygen:age:decrypt": {
+      "description": "Decrypt decrypts a file encrypted to one or more identities.",
+      "inputs": {
+        "properties": {
+          "ciphertext": {
+            "type": "string",
+            "description": "The ciphertext to decrypt."
+          },
+          "identity": {
+            "type": "string",
+            "description": "The identity to decrypt with.",
+            "secret": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "ciphertext",
+          "identity"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:age:encrypt": {
+      "description": "Encrypt encrypts a file to one or more recipients.",
+      "inputs": {
+        "properties": {
+          "plaintext": {
+            "type": "string",
+            "description": "The plaintext to encrypt.",
+            "secret": true
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The recipients to encrypt to."
+          }
+        },
+        "type": "object",
+        "required": [
+          "plaintext",
+          "recipients"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:awskms:decrypt": {
+      "description": "Decrypt decrypts a file encrypted to one or more identities.",
+      "inputs": {
+        "properties": {
+          "ciphertext": {
+            "type": "string",
+            "description": "The ciphertext to decrypt."
+          }
+        },
+        "type": "object",
+        "required": [
+          "ciphertext"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:awskms:encrypt": {
+      "description": "Encrypt encrypts a file to one or more recipients.",
+      "inputs": {
+        "properties": {
+          "encryptionAlgorithm": {
+            "type": "string",
+            "description": "The encryption algorithm to use. SYMMETRIC_DEFAULT | RSAES_OAEP_SHA_1 | RSAES_OAEP_SHA_256 | SM2PKE"
+          },
+          "keyId": {
+            "type": "string",
+            "description": "Identifies the KMS key to use in the encryption operation"
+          },
+          "plaintext": {
+            "type": "string",
+            "description": "The plaintext to encrypt. Base64-encoded binary data object",
+            "secret": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "keyId",
+          "plaintext"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:pem:encode": {
+      "inputs": {
+        "properties": {
+          "bytes": {
+            "type": "string"
+          },
+          "header": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bytes",
+          "header",
+          "type"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:pkcs11:decrypt": {
+      "description": "Decrypt decrypts data using a key stored in a PKCS#11 HSM.",
+      "inputs": {
+        "properties": {
+          "ciphertext": {
+            "type": "string",
+            "description": "The ciphertext to decrypt (base64-encoded)"
+          },
+          "keyLabel": {
+            "type": "string",
+            "description": "Label of the key to use for decryption"
+          },
+          "slotNumber": {
+            "type": "integer",
+            "description": "Slot number to use for the PKCS#11 session"
+          },
+          "tokenLabel": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ciphertext",
+          "keyLabel",
+          "tokenLabel"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    },
+    "keygen:pkcs11:encrypt": {
+      "description": "Encrypt encrypts data using a key stored in a PKCS#11 HSM.",
+      "inputs": {
+        "properties": {
+          "keyLabel": {
+            "type": "string",
+            "description": "Label of the key to use for encryption"
+          },
+          "plaintext": {
+            "type": "string",
+            "description": "The plaintext to encrypt (base64-encoded)",
+            "secret": true
+          },
+          "slotNumber": {
+            "type": "integer",
+            "description": "Slot number to use for the PKCS#11 session"
+          },
+          "tokenLabel": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keyLabel",
+          "plaintext"
+        ]
+      },
+      "outputs": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

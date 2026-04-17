@@ -1,0 +1,47 @@
+# Makefile for pulumi-keygen provider
+
+.PHONY: build install schema test
+
+# Default target
+all: build
+
+# Build the provider binary
+build:
+	go build -o pulumi-resource-keygen .
+
+# Generate schema
+schema: build
+	pulumi package get-schema ./pulumi-resource-keygen > schema.json
+
+# Run tests
+test:
+	go test ./...
+
+# Clean build artifacts
+clean:
+	rm -f pulumi-resource-keygen
+	rm -f schema.json
+
+sdk: build
+	pulumi package gen-sdk --language nodejs ./pulumi-resource-keygen
+	pulumi package gen-sdk --language go ./pulumi-resource-keygen
+# Release build for different platforms
+release:
+	gh release create "v$VERSION" ./dist/pulumi-resource-keygen-arm64 ./dist/pulumi-resource-keygen-darwin-amd64
+
+release-linux:
+	GOOS=linux GOARCH=amd64 go build -o dist/pulumi-resource-keygen-linux-amd64 .
+
+release-darwin:
+	GOOS=darwin GOARCH=amd64 go build -o dist/pulumi-resource-keygen-darwin-amd64 .
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  build     - Build the provider binary"
+	@echo "  install   - Install the provider binary to ~/.pulumi/plugins"
+	@echo "  schema    - Generate schema.json"
+	@echo "  test      - Run tests"
+	@echo "  clean     - Clean build artifacts"
+	@echo "  release   - Build release binaries for all platforms"
+	@echo "  help      - Show this help message"

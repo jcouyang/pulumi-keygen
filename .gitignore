@@ -1,0 +1,13 @@
+# Binaries
+pulumi-resource-keygen
+pulumi-resource-keygen-*
+
+# Build artifacts
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
