@@ -41,4 +41,4 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - uses: actions/download-artifact@v4
       - run: |
-          nix-shell --run 'gh release v${VERSION} ./ubuntu-latest-binary/pulumi-resource-keygen-linux-amd64 ./macos-latest/pulumi-resource-keygen-darwin-amd64'
+          nix-shell --run 'make release'

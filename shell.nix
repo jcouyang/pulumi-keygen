@@ -1,4 +1,4 @@
-{pkgs ? import <nixpkgs> {}}:
+{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/aaca8b07c7ba.tar.gz") {}}:
 with builtins;
 
 let pulumi = pkgs.pulumi-bin.overrideDerivation (o: {

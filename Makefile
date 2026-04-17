@@ -27,13 +27,13 @@ sdk: build
 	pulumi package gen-sdk --language go ./pulumi-resource-keygen
 # Release build for different platforms
 release:
-	gh release create "v$VERSION" ./dist/pulumi-resource-keygen-arm64 ./dist/pulumi-resource-keygen-darwin-amd64
+	gh release v${VERSION} ./ubuntu-latest-binary/pulumi-resource-keygen-v${VERSION}-linux-amd64 ./macos-latest/pulumi-resource-keygen-v${VERSION}-darwin-amd64
 
 release-linux:
-	GOOS=linux GOARCH=amd64 go build -o dist/pulumi-resource-keygen-linux-amd64 .
+	GOOS=linux GOARCH=amd64 go build -o dist/pulumi-resource-keygen-v${VERSION}-linux-amd64 .
 
 release-darwin:
-	GOOS=darwin GOARCH=amd64 go build -o dist/pulumi-resource-keygen-darwin-amd64 .
+	GOOS=darwin GOARCH=amd64 go build -o dist/pulumi-resource-keygen-v${VERSION}-darwin-amd64 .
 
 # Help
 help:
