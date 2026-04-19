@@ -9,19 +9,18 @@ in pkgs.mkShell {
   buildInputs = [
     pkgs.gopls
     pkgs.go
-    pulumi
+    pulumi ] ++ pkgs.lib.optionals (pkgs.stdenv.isLinux) [
     # CGO dependencies for PKCS#11 support
     pkgs.gcc
     pkgs.pkg-config
     pkgs.openssl
     pkgs.softhsm
     pkgs.opensc
-    pkgs.gcc
-  ];
+  ] ;
 
   # Set CGO_ENABLED for PKCS#11 support
-  CGO_ENABLED = "1";
-  HSM_LIB = "${pkgs.softhsm}/lib/softhsm/libsofthsm2.so";
+  CGO_ENABLED = if pkgs.stdenv.isLinux then "1" else "0";
+  HSM_LIB = if pkgs.stdenv.isLinux then "${pkgs.softhsm}/lib/softhsm/libsofthsm2.so" else "";
 
   shellHook = ''
     export VERSION=${version}.''${GITHUB_RUN_NUMBER:-local}
