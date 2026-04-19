@@ -33,7 +33,7 @@ release-linux:
 	GOOS=linux GOARCH=amd64 go build -o dist/pulumi-resource-keygen-v${VERSION}-linux-amd64 .
 
 release-darwin:
-	GOOS=darwin GOARCH=amd64 go build -o dist/pulumi-resource-keygen-v${VERSION}-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 go build -o dist/pulumi-resource-keygen-v${VERSION}-darwin-arm64 .
 
 # Help
 help:
